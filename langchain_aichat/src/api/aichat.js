@@ -70,6 +70,7 @@ export const chatWithAI = (sessionId, message) => {
   return api.get('/aichat', {
     params: { o: sessionId, msg: message },
     responseType: 'stream', // 设置响应类型为流
+    adapter: 'fetch', // 浏览器 XHR 不支持 stream，需切到 fetch 适配器才能真正流式读取
   })
 }
 
