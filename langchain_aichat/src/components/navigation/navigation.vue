@@ -23,7 +23,7 @@
     <div class="main-content">
       <!-- 欢迎标题 -->
       <div class="welcome-section">
-        <h1 class="welcome-title">欢迎使用 AI 智能助手</h1>
+        <h1 class="welcome-title">欢迎使用 AI 模拟面试</h1>
         <p class="welcome-subtitle">探索人工智能的无限可能</p>
       </div>
 
@@ -36,8 +36,8 @@
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
             </svg>
           </div>
-          <h3 class="card-title">AI 对话</h3>
-          <p class="card-description">与智能AI进行自然语言对话，获取答案和建议</p>
+          <h3 class="card-title">模拟面试</h3>
+          <p class="card-description">与资深面试官进行 Java 后端模拟面试，获得专业点评与建议</p>
           <div class="card-button">
             <span>开始对话</span>
             <svg

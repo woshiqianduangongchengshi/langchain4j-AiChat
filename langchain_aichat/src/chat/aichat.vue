@@ -40,7 +40,7 @@
     <div class="chat-input">
       <textarea
         v-model="inputMessage"
-        placeholder="发送消息..."
+        placeholder="输入你的回答，或发送“开始”让面试官提问..."
         @keydown.enter.exact="handleSendMessage"
         @keydown.enter.shift="($event) => $event.preventDefault()"
       ></textarea>

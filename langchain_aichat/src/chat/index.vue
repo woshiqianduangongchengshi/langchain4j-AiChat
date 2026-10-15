@@ -8,7 +8,7 @@
         </svg>
         返回导航
       </button>
-      <h1 class="chat-title">AI 对话</h1>
+      <h1 class="chat-title">AI 模拟面试</h1>
     </div>
     
     <div class="chat-content-wrapper">
