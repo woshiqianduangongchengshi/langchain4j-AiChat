@@ -1,208 +1,120 @@
-# langchain4j-AiChat
-基于LangChain4J的AI聊天应用，包含前端和后端完整实现。
+# langchain4j-AiChat · AI 模拟面试助手
 
-## 项目概述
-该项目是一个基于LangChain4J构建的AI聊天应用，提供了完整的前后端解决方案。前端采用现代Web技术栈，后端基于Java生态系统，实现了与AI模型的交互功能。
+基于 **LangChain4j + Ollama** 的全栈 AI 模拟面试应用。AI 扮演资深 Java 后端面试官，结合本地 RAG 面试题库逐题提问、实时点评，并在结束时给出综合评价。支持用户系统、多会话管理、流式输出与 AI 生图。
+
+## 功能特性
+
+- **用户系统**：注册 / 登录 / 修改资料，基于 JWT 的无状态鉴权（Spring Security）
+- **AI 模拟面试**：AI 一次出一道 Java 后端面试题，作答后点评并追问；发送「结束面试」返回综合评价
+- **流式聊天**：基于 LangChain4j `@AiService` + Reactor `Flux<String>` 的 SSE 流式响应
+- **RAG 本地知识库**：启动时加载 `knowledgefork/*.md` 面试题库，Ollama 嵌入模型检索，为提问提供素材
+- **多会话管理**：会话增删改查，聊天记忆持久化到 MySQL（MessageWindowChatMemory，保留最近 5 条）
+- **AI 生图**：前端直连 SiliconFlow（Kwai-Kolors/Kolors 模型）生成图片
+- **面试评价**：对会话进行评分与统计
 
 ## 技术栈
-### 前端 (langchain_aichat)
-- Vue.js 3
-- Vite
-- JavaScript/TypeScript
-- Pinia (状态管理)
-- Vue Router
-### 后端 (langchain)
-- Java
-- Spring Boot
-- Maven
-- LangChain4J
+
+| 端 | 技术 |
+| --- | --- |
+| 后端 `langchain/` | Java 21 · Spring Boot 3.5.4 · LangChain4j 1.0.0-beta3 · Spring Security(JWT) · Spring Data JPA · MySQL · Maven |
+| 前端 `langchain_aichat/` | Vue 3 · Vite 7 · Element Plus · Pinia · Vue Router · Axios |
+| AI 模型 | Ollama 本地运行：`deepseek-r1:8b`（聊天）+ `nomic-embed-text:v1.5`（RAG 嵌入） |
+
 ## 项目结构
+
 ```
-langchainAi/
-├── langchain/          # 后端Java项
-目
-│   ├── src/            # 源代码
-│   ├── target/         # 编译输出
-│   ├── pom.xml         # Maven依赖
-配置
-│   └── ...
-└── langchain_aichat/   # 前端Vue项目
-    ├── src/            # 源代码
-    ├── public/         # 静态资源
-    ├── index.html      # 入口HTML
-    ├── package.json    # NPM依赖配置
-    └── ...
+langchain4j-AiChat/
+├── langchain/                # 后端 Spring Boot 项目
+│   ├── src/main/java/org/example/langchain/
+│   │   ├── aichat/           # AI 服务（@AiService 流式接口）、RAG 检索拼装
+│   │   ├── aichatmemory/     # 聊天记忆持久化
+│   │   ├── chatfunc/         # 会话管理
+│   │   ├── customer/         # 用户与鉴权
+│   │   ├── config/           # Security / JWT / CORS 配置
+│   │   ├── review/           # 面试评价
+│   │   └── tools/            # Function Calling 扩展点（预留）
+│   └── src/main/resources/
+│       ├── application.properties
+│       └── knowledgefork/    # RAG 知识库（Java 面试题库 Markdown）
+└── langchain_aichat/         # 前端 Vue 项目
+    ├── src/api/              # 接口封装
+    ├── src/chat/             # 聊天页
+    └── src/components/       # 登录/评价/生图/个人中心等页面
 ```
+
 ## 快速开始
-### 前置条件
-- JDK 11+ （推荐JDK 17）
-- Maven 3.6+
-- Node.js 16+
-- npm 8+
-### 后端运行
-```
-# 进入后端目录
-d:cd JAVAbcak\langchainAi\langchain
 
-# 构建项目
-mvn clean install
+### 前置依赖
 
-# 运行应用
-mvn spring-boot:run
-```
-### 前端运行
-```
-# 进入前端目录
-d:cd 
-JAVAbcak\langchainAi\langchain_aicha
-t
+| 依赖 | 版本要求 |
+| --- | --- |
+| JDK | 21 |
+| Maven | 3.6+ |
+| Node.js | ^20.19 或 >=22.12（项目已用 Volta 固定 22.23.3） |
+| MySQL | 8.x |
+| Ollama | 需拉取 `deepseek-r1:8b` 与 `nomic-embed-text:v1.5` 两个模型 |
 
-# 安装依赖
-npm install
+### 1. 准备数据库
 
-# 运行开发服务器
-npm run dev
+```sql
+CREATE DATABASE langchain DEFAULT CHARSET utf8mb4;
 ```
-## 功能特性
-1. 1.
-   AI聊天界面，支持文本交互
-2. 2.
-   集成LangChain4J框架，实现与多种AI模型的对接
-3. 3.
-   响应式设计，适配不同设备
-4. 4.
-   支持聊天历史记录
+
+表结构由 JPA `ddl-auto=update` 自动创建，无需手动建表。
+
+### 2. 准备 Ollama 模型
+
+```bash
+ollama pull deepseek-r1:8b
+ollama pull nomic-embed-text:v1.5
+```
+
+> 注意：8b 模型首次加载较慢，如遇到读取超时，可在 `application.properties` 中增加：
+> `langchain4j.ollama.streaming-chat-model.timeout=PT5M`
+
+### 3. 启动后端（端口 8081）
+
+```bash
+cd langchain
+mvn spring-boot:run
+```
+
+接口统一前缀为 `/api`（如 `http://localhost:8081/api/auth/login`）。
+
+### 4. 启动前端（端口 5173）
+
+```bash
+cd langchain_aichat
+npm install
+npm run dev
+```
+
+Vite 已配置 `/api` 代理到 `http://localhost:8081`。
+
+### 5.（可选）开启 AI 生图
+
+在 `langchain_aichat/` 下新建 `.env.local`：
+
+```bash
+VITE_API_KEY=你的SiliconFlow API Key
+```
+
+未配置时生图功能不可用，其余功能不受影响。
+
 ## 配置说明
-### 后端配置
-后端配置文件位于 `
-d:JAVAbcak\langchainAi\langchain\src\main\resources\application.properties
-`，主要配置项包括：
-- `spring.ai.openai.api-key`：OpenAI API密钥
-- `spring.ai.openai.model`：使用的AI模型名称
-- `spring.ai.openai.temperature`：模型温度参数
-### 前端配置
-前端配置文件位于 `
-d:JAVAbcak\langchainAi\langchain_aichat\src\main\resources\application.properties
-`，主要配置项包括：
-- `VUE_APP_API_URL`：后端API基础URL
-- `VUE_APP_API_KEY`：OpenAI API密钥
-- `VUE_APP_MODEL_NAME`：使用的AI模型名称
-- `VUE_APP_TEMPERATURE`：模型温度参数
 
-### 前置条件
-- JDK 11+ （推荐JDK 17）
-- Maven 3.6+
-- Node.js 16+
-- npm 8+
-### 后端运行
-```
-# 进入后端目录
-d:cd JAVAbcak\langchainAi\langchain
+### 后端环境变量
 
-# 构建项目
-mvn clean install
+`application.properties` 中的敏感项支持环境变量覆盖（冒号后为本地开发默认值）：
 
-# 运行应用
-mvn spring-boot:run
-```
-### 前端运行
-```
-# 进入前端目录
-d:cd 
-JAVAbcak\langchainAi\langchain_aicha
-t
+| 环境变量 | 说明 | 默认值 |
+| --- | --- | --- |
+| `DB_USERNAME` | MySQL 用户名 | `root` |
+| `DB_PASSWORD` | MySQL 密码 | `123456` |
+| `JWT_SECRET` | JWT 签名密钥（≥32 字符，生产必改） | 开发占位值 |
 
-# 安装依赖
-npm install
+聊天 / 嵌入模型可在 `application.properties` 中切换（`langchain4j.ollama.*`），文件内也保留了 SiliconFlow 远程模型的注释配置。
 
-# 运行开发服务器
-npm run dev
-```
-## 功能特性
-1. 1.
-   AI聊天界面，支持文本交互
-2. 2.
-   集成LangChain4J框架，实现与多种AI模型的对接
-3. 3.
-   响应式设计，适配不同设备
-4. 4.
-   支持聊天历史记录
-5. 5.
-   提供API接口，方便第三方集成
-## 配置说明
-### 后端配置
-后端配置文件位于 `application.properties` （可能需要创建）。主要配置项包括：
+## License
 
-```
-# 服务器端口
-server.port=8080
-
-# 数据库配置
-spring.datasource.url=jdbc:mysql://
-localhost:3306/ai_chat
-spring.datasource.username=root
-spring.datasource.password=password
-
-# LangChain4J配置
-langchain4j.openai.
-api-key=your-openai-api-key
-langchain4j.openai.model-name=gpt-3.
-5-turbo
-```
-### 前端配置
-前端配置文件位于 `.env.local` 。主要配置项包括：
-
-```
-# 后端API基础URL
-VITE_API_BASE_URL=http://
-localhost:8080/api
-
-# 开发模式配置
-VITE_DEV_MODE=true
-```
-## API文档
-API文档位于 `api-documentation.md` ，包含了所有后端API接口的详细说明。
-
-## 部署说明
-### 后端部署
-1. 1.
-   构建可执行JAR文件：
-```
-mvn clean package -DskipTests
-```
-2. 1.
-   运行JAR文件：
-```
-java -jar target/langchain-0.0.
-1-SNAPSHOT.jar
-```
-### 前端部署
-1. 1.
-   构建生产环境代码：
-```
-npm run build
-```
-2. 1.
-   将生成的 dist 目录下的文件部署到Web服务器（如Nginx、Apache等）。
-## 贡献指南
-1. 1.
-   Fork本仓库
-2. 2.
-   创建特性分支： git checkout -b feature/your-feature
-3. 3.
-   提交更改： git commit -m 'Add some feature'
-4. 4.
-   推送到分支： git push origin feature/your-feature
-5. 5.
-   提交Pull Request
-## 许可证
-本项目采用MIT许可证，详情请见LICENSE文件。
-
-## 联系方式
-如有问题或建议，请通过以下方式联系：
-
-- GitHub Issues: Issues
-- Email: example@example.com
-## 鸣谢
-- LangChain4J团队提供的优秀框架
-- Vue.js和Spring Boot社区
+[MIT](LICENSE)

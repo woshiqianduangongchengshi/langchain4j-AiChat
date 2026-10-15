@@ -1,0 +1,31 @@
+# ============ IDE ============
+# IntelliJ IDEA（项目根级，子目录另有局部 .gitignore）
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VS Code
+.vscode/
+
+# ============ 环境变量与密钥 ============
+# 前端 SiliconFlow API Key 等本地私密配置
+.env
+.env.local
+.env.*.local
+
+# ============ 构建产物 ============
+# Maven
+target/
+
+# Node / Vite
+node_modules/
+dist/
+dist-ssr/
+coverage/
+
+# ============ 系统与日志 ============
+.DS_Store
+Thumbs.db
+*.log
+logs/
