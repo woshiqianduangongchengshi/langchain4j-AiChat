@@ -51,10 +51,6 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         // 新增对 AI 聊天接口的权限放行
                         .requestMatchers("/aichat").permitAll()
-                        // 已有的聊天会话接口
-                        .requestMatchers("/chat/sessions/**").permitAll()
-                        // 新增评价接口权限放行
-                        .requestMatchers("/reviews/**").permitAll()
                         // 其他所有接口需要认证
                         .anyRequest().authenticated()
                 );
